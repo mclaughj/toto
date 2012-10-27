@@ -180,7 +180,7 @@ module Toto
       end
       
       def tags
-        @config[:tags]
+        @config[:tags].gsub(/\s+/, "").split(",")
       end
       
       def render page, type

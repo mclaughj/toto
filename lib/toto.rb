@@ -78,7 +78,7 @@ module Toto
       end}.merge archives
     end
 
-    def archives filter = ""
+    def archives filter = "", tag = nil
       entries = ! self.articles.empty??
         self.articles.select do |a|
           filter !~ /^\d{4}/ || File.basename(a) =~ /^#{filter}/
@@ -86,7 +86,14 @@ module Toto
           Article.new article, @config
         end : []
 
-      return :archives => Archives.new(entries, @config)
+      if tag.nil?
+        { :archives => Archives.new(entries, @config) }
+      else 
+        tagged = entries.select do |article|
+          article.tags.each{|t| t == tag }
+        end 
+        { :tag => tag, :archives => tagged } if tagged.size > 0 
+      end
     end
 
     def article route
@@ -97,7 +104,7 @@ module Toto
       self[:root]
     end
 
-    def go route, type = :html, env
+    def go route, env = {}, type = :html
       route << self./ if route.empty?
       type, path = type =~ /html|xml|json/ ? type.to_sym : :html, route.join('/')
       context = lambda do |data, page|
@@ -113,6 +120,14 @@ module Toto
               context[article(route), :article]
             else http 400
           end
+          
+        elsif route.first == 'tag' && route.size == 2 
+          if (data = archives('', route[1])).nil?
+            http 404 
+          else 
+            context[data, :tags]
+          end
+        
         elsif respond_to?(path)
           context[send(path, type), path.to_sym]
         elsif (repo = @config[:github][:repos].grep(/#{path}/).first) &&
@@ -163,7 +178,11 @@ module Toto
       def title
         @config[:title]
       end
-
+      
+      def tags
+        @config[:tags]
+      end
+      
       def render page, type
         content = to_html page, @config
         type == :html ? to_html(:layout, @config, &Proc.new { content }) : send(:"to_#{type}", page)
@@ -184,7 +203,7 @@ module Toto
   class Repo < Hash
     include Template
 
-    README = "http://github.com/%s/%s/raw/master/README.%s"
+    README = "https://github.com/%s/%s/raw/master/README.%s"
 
     def initialize name, config
       self[:name], @config = name, config
@@ -270,12 +289,17 @@ module Toto
     def body
       markdown self[:body].sub(@config[:summary][:delim], '') rescue markdown self[:body]
     end
+    
+    def tags
+      self[:tags] = self[:tags].gsub(/\s+/, "").split(",") || ""
+    end
 
     def path
       "/#{@config[:prefix]}#{self[:date].strftime("/%Y/%m/%d/#{slug}/")}".squeeze('/')
     end
 
     def title()   self[:title] || "an article"               end
+    def tags()    self[:tags] || ""                          end
     def date()    @config[:date].call(self[:date])           end
     def author()  self[:author] || @config[:author]          end
     def to_html() self.load; super(:article, @config)        end
@@ -335,10 +359,10 @@ module Toto
       path, mime = @request.path_info.split('.')
       route = (path || '/').split('/').reject {|i| i.empty? }
 
-      response = @site.go(route, *(mime ? mime : []), env)
+      response = @site.go(route, env, *(mime ? mime : []))
 
       @response.body = [response[:body]]
-      @response['Content-Length'] = response[:body].length.to_s unless response[:body].empty?
+      @response['Content-Length'] = response[:body].bytesize.to_s unless response[:body].empty?
       @response['Content-Type']   = Rack::Mime.mime_type(".#{response[:type]}")
 
       # Set http cache headers

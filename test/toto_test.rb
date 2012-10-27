@@ -102,6 +102,14 @@ context Toto do
     asserts("summary shouldn't be empty")   { topic.body }.includes_html("summary" => /.{10,}/)
   end
 
+  context "GET a tag page" do 
+    setup { @toto.get('/tags/the-wizard-of-oz') }
+    asserts("returns a 200")                         { topic.status }.equals 200 
+    asserts("body is not empty")                     { not topic.body.empty? }
+    should("includes only the entries for that tag") { topic.body }.includes_elements("li.entry", 2)
+    should("has access to @tag")                     { topic.body }.includes_html("#tag" => /The Wizard of Oz/)
+  end
+
   context "GET to a repo name" do
     setup do
       class Toto::Repo

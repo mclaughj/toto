@@ -90,7 +90,8 @@ module Toto
         { :archives => Archives.new(entries, @config) }
       else 
         tagged = entries.select do |article|
-          article.tags.each{|t| t == tag }
+          article_tag = article.tags
+          article_tag && article.tags.gsub(/\s+/, "").split(",").any?
         end 
         { :tag => tag, :archives => tagged } if tagged.size > 0 
       end
@@ -123,9 +124,9 @@ module Toto
           
         elsif route.first == 'tag' && route.size == 2 
           if (data = archives('', route[1])).nil?
-            http 404 
+            http 404
           else 
-            context[data, :tags]
+            context[data, :tag]
           end
         
         elsif respond_to?(path)
@@ -178,11 +179,7 @@ module Toto
       def title
         @config[:title]
       end
-      
-      def tags
-        @config[:tags].gsub(/\s+/, "").split(",")
-      end
-      
+          
       def render page, type
         content = to_html page, @config
         type == :html ? to_html(:layout, @config, &Proc.new { content }) : send(:"to_#{type}", page)
@@ -289,17 +286,13 @@ module Toto
     def body
       markdown self[:body].sub(@config[:summary][:delim], '') rescue markdown self[:body]
     end
-    
-    def tags
-      self[:tags] = self[:tags].gsub(/\s+/, "").split(",") || ""
-    end
 
     def path
       "/#{@config[:prefix]}#{self[:date].strftime("/%Y/%m/%d/#{slug}/")}".squeeze('/')
     end
 
     def title()   self[:title] || "an article"               end
-    def tags()    self[:tags] || ""                          end
+    def tags()    self[:tags]  || ""                         end
     def date()    @config[:date].call(self[:date])           end
     def author()  self[:author] || @config[:author]          end
     def to_html() self.load; super(:article, @config)        end

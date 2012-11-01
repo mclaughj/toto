@@ -91,7 +91,7 @@ module Toto
       else 
         tagged = entries.select do |article|
           article_tag = article.tags
-          article_tag && article.tags.gsub(/\s+/, "").split(",").any?
+          article_tag && article.tags.gsub(/\s+/, "").split(",").include?(tag)
         end 
         { :tag => tag, :archives => tagged } if tagged.size > 0 
       end

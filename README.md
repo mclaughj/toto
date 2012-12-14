@@ -152,6 +152,14 @@ you could add `set :author, 'John Galt'` inside the `Toto::Server.new` block. He
       "<font style='font-size:300%'>toto, we're not in Kansas anymore (#{code})</font>"
     end
 
+## tags
+
+In this fork, toto has full support for tagging articles.
+
+To tag an article, add _tags: *yourtagnamehere*_ to the article metadata at the top of any article. To add multiple tags, separate them with a comma.
+
+To display the tags in your theme, use _<%= article.tags %>_. That will return the exact string that's in your article information, which you can then manipulate however you'd like.
+
 thanks
 ------
 

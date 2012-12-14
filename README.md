@@ -156,7 +156,7 @@ you could add `set :author, 'John Galt'` inside the `Toto::Server.new` block. He
 
 In this fork, toto has full support for tagging articles.
 
-To tag an article, add `tags: *yourtagnamehere*` to the article metadata at the top of any article. To add multiple tags, separate them with a comma.
+To tag an article, add `tags: yourtagnamehere` to the article metadata at the top of any article. To add multiple tags, separate them with a comma.
 
 To display the tags in your theme, use `<%= article.tags %>`. That will return the exact string that's in your article information, which you can then manipulate however you'd like.
 

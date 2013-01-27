@@ -5,11 +5,11 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "toto"
-    gem.summary = %Q{a quick trip around the blogosphere}
-    gem.description = %Q{a sweet blogging engine}
-    gem.email = "josephmclaughlin@me.com"
-    gem.homepage = "http://github.com/mclaughj/toto"
-    gem.authors = ["mclaughj"]
+    gem.summary = %Q{the tiniest blog-engine in Oz}
+    gem.description = %Q{the tiniest blog-engine in Oz.}
+    gem.email = "self@cloudhead.net"
+    gem.homepage = "http://github.com/cloudhead/toto"
+    gem.authors = ["cloudhead, mclaughj"]
     gem.add_development_dependency "riot"
     gem.add_dependency "builder"
     gem.add_dependency "rack"

@@ -78,7 +78,7 @@ module Toto
       end}.merge archives
     end
 
-    def archives filter = "", tag = nil, category = nil
+    def archives filter = "", tag = nil
       entries = ! self.articles.empty??
         self.articles.select do |a|
           filter !~ /^\d{4}/ || File.basename(a) =~ /^#{filter}/
@@ -86,20 +86,14 @@ module Toto
           Article.new article, @config
         end : []
 
-      if tag.nil? && category.nil?
+      if tag.nil?
         { :archives => Archives.new(entries, @config) }
-      elsif category.nil?
+      else 
         tagged = entries.select do |article|
           article_tag = article.tags
           article_tag && article.tags.gsub(/\s+/, "").split(",").include?(tag)
-        end
-        { :tag => tag, :archives => tagged } if tagged.size > 0
-      else
-        categorized = entries.select do |article|
-          article_category = article.categories
-          article_category && article.categories.gsub(/\s+/, "").split(",").include?(category)
-        end
-        { :category => category, :archives => categorized } if categorized.size > 0
+        end 
+        { :tag => tag, :archives => tagged } if tagged.size > 0 
       end
     end
 
@@ -119,7 +113,6 @@ module Toto
       end
 
       body, status = if Context.new.respond_to?(:"to_#{type}")
-        # The route for date based archives
         if route.first =~ /\d{4}/
           case route.size
             when 1..3
@@ -128,23 +121,14 @@ module Toto
               context[article(route), :article]
             else http 400
           end
-        # The route for tags such that a tag is
-        # reached by /tag/#{tag_name}/
-        elsif route.first == 'tag' && route.size == 2
+          
+        elsif route.first == 'tag' && route.size == 2 
           if (data = archives('', route[1])).nil?
             http 404
-          else
+          else 
             context[data, :tag]
           end
-        # The route for categories such that a category is
-        # reached by /category/#{category_name}/
-        elsif route.first == 'category' && route.size == 2
-          if (data = archives('', route[1])).nil?
-            http 404
-          else
-            context[data, :category]
-          end
-
+        
         elsif respond_to?(path)
           context[send(path, type), path.to_sym]
         elsif (repo = @config[:github][:repos].grep(/#{path}/).first) &&
@@ -195,7 +179,7 @@ module Toto
       def title
         @config[:title]
       end
-
+          
       def render page, type
         content = to_html page, @config
         type == :html ? to_html(:layout, @config, &Proc.new { content }) : send(:"to_#{type}", page)
@@ -307,12 +291,11 @@ module Toto
       "/#{@config[:prefix]}#{self[:date].strftime("/%Y/%m/%d/#{slug}/")}".squeeze('/')
     end
 
-    def title()      self[:title]      || "an article"     end
-    def tags()       self[:tags]       || ""               end
-    def categories() self[:categories] || ""               end
-    def date()       @config[:date].call(self[:date])      end
-    def author()     self[:author]     || @config[:author] end
-    def to_html()    self.load; super(:article, @config)   end
+    def title()   self[:title] || "an article"               end
+    def tags()    self[:tags]  || ""                         end
+    def date()    @config[:date].call(self[:date])           end
+    def author()  self[:author] || @config[:author]          end
+    def to_html() self.load; super(:article, @config)        end
     alias :to_s to_html
   end
 
@@ -389,3 +372,4 @@ module Toto
     end
   end
 end
+
